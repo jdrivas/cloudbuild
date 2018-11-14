@@ -1,18 +1,36 @@
 #!/usr/bin/env python
 
+from os import environ
 import json
+
 import click
+
 import googleapiclient as gapi
 import googleapiclient.discovery
+from google.oauth2 import service_account
 
 @click.group()
 @click.option("--project", "-p", prompt=True, metavar="<project name>", help="GCE project name")
+@click.option("--credential_file", "-c", default="./account.json", show_default=True, help="pathname of GCE credentials")
 @click.pass_context
-def cli(ctx, project):
+def cli(ctx, project, credential_file):
   ctx.obj = {} if ctx.obj == None else ctx.obj
   ctx.obj['project'] = project
-  cloudbuild = gapi.discovery.build('cloudbuild' , 'v1')
-  ctx.obj['cloudbuild'] = cloudbuild
+
+  # get credentials and the cloubuild connection.
+  cloudbuild = None
+  if "GOOGLE_APPLICATION_CREDENTIALS" in environ:
+    cloudbuild = gapi.discovery.build('cloudbuild' , 'v1')
+  else:
+    try: 
+      credentials = service_account.Credentials.from_service_account_file(credential_file)
+      cloudbuild = gapi.discovery.build('cloudbuild' , 'v1', credentials=credentials)
+    except Exception as err:
+      print(f"Credentials error: {err}")
+      exit()
+  
+  if cloudbuild:
+    ctx.obj['cloudbuild'] = cloudbuild
 
 @cli.command()
 @click.pass_context
