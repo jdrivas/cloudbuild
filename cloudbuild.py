@@ -17,7 +17,7 @@ def cli(ctx, project, credential_file):
   ctx.obj = {} if ctx.obj == None else ctx.obj
   ctx.obj['project'] = project
 
-  # get credentials and the cloubuild connection.
+  # get credentials and the cloudbuild connection.
   cloudbuild = None
   if "GOOGLE_APPLICATION_CREDENTIALS" in environ:
     cloudbuild = gapi.discovery.build('cloudbuild' , 'v1')
@@ -46,6 +46,18 @@ def create(ctx, trigger_def_file):
 
 @cli.command()
 @click.pass_context
+@click.argument('trigger-id', metavar="<trigger-id>")
+def delete(ctx, trigger_id):
+  """Delete the trigger by id"""
+  cloudbuild = ctx.obj['cloudbuild']
+  project = ctx.obj['project']
+
+  result = cloudbuild.projects().triggers().delete(projectId=project, triggerId=trigger_id).execute()
+  print(f"deleted {trigger_id}")
+  print(result)
+
+@cli.command()
+@click.pass_context
 def list(ctx):
   """List the currently defined triggers for the project."""
   cloudbuild = ctx.obj['cloudbuild']
@@ -56,9 +68,10 @@ def list(ctx):
   print(f"For {project} there are {len(triggers)} cloud build triggers defined.")
   for trigger in triggers:
     t = trigger['triggerTemplate']
-    print(f"- {trigger['description']}")
-    print(f"   repo: {t['repoName']}")
-    print(f"   branch: {t['branchName']}")
+    print(f"{trigger['description']}")
+    print(f"    Id: {trigger['id']}")
+    print(f"    repo: {t['repoName']}")
+    print(f"    branch: {t['branchName']}")
 
 if __name__ == '__main__':
     cli()

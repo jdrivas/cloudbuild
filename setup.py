@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
   name='cloudbuild',
-  version='0.0.1',
+  version='0.0.2',
   py_modules=['cloudbuild'],
   install_requires=[
     'click',
